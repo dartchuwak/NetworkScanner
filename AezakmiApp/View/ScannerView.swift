@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ScannerView: View {
-    @StateObject var btViewModel = ScannerViewModel()
+    @ObservedObject var scannerViewModel: ScannerViewModel
     @State var isScanActive: Bool = false
     @State private var picker: DeviceType = .bt
     
@@ -25,18 +25,19 @@ struct ScannerView: View {
                     .padding(.horizontal)
                     
                     ScrollView {
-                        VStack {
+                        LazyVStack {
                             if picker == .bt {
-                                ForEach(btViewModel.devices) { device in
-                                    DeviceCardView(device: device)
+                                ForEach(scannerViewModel.bluetoothDevices) { device in
+                                    BluetoothDeviceCardView(device: device)
                                 }
                                 
                             } else {
-                                ForEach(btViewModel.devices) { device in
-                                    DeviceCardView(device: device)
+                                ForEach(scannerViewModel.lanDevices) { device in
+                                    LanDeviceCardView(device: device)
                                 }
                             }
                         }
+                        .padding(.horizontal)
                     }
                 }
                 .navigationTitle("Поиск")
@@ -45,7 +46,7 @@ struct ScannerView: View {
                     Spacer()
                     
                     Button {
-                        btViewModel.startScanning()
+                        scannerViewModel.startScanning()
                     } label: {
                         Text("Начать сканирование")
                             .font(.headline)
@@ -58,15 +59,11 @@ struct ScannerView: View {
                     .padding(.bottom, 40)
                 }
                 
-                if btViewModel.isScanActive {
+                if scannerViewModel.isScanActive {
                     ProgressView()
                         .scaleEffect(1)
                 }
             }
         }
     }
-}
-
-#Preview {
-    ScannerView()
 }

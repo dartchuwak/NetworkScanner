@@ -11,9 +11,13 @@ import CoreData
 @main
 struct AezakmiAppApp: App {
     
+    @StateObject private var container = AppContainer()
+    
     var body: some Scene {
         WindowGroup {
-          RootView()
+            RootView()
+                .environmentObject(container)
+                .environment(\.managedObjectContext, container.coreDataStack.context)
         }
     }
 }

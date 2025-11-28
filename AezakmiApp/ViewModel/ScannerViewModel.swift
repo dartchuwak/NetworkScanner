@@ -7,63 +7,96 @@
 
 import Foundation
 import Combine
-import SwiftUI
-import CoreBluetooth
-import CoreData
 
 final class ScannerViewModel: ObservableObject {
     
-    @Published var devices: [BluetoothDeviceModel] = []
+    @Published var bluetoothDevices: [BluetoothDeviceModel] = []
+    @Published var lanDevices: [LanDeviceModel] = []
     @Published var isScanActive: Bool = false
+    
+   
     
     private var cancellables: Set<AnyCancellable> = []
     private var timer: AnyCancellable?
     
-    private var bluetoothManager: BluetoothAgent
-    private var coreData = CoreDataStack.shared
-    private var currentScanSession: ScanSession?
+    // MARK: Зависимости
     
-    private var foundDevices: [BluetoothDeviceModel] = []
+    private let coreDataStack: CoreDataStack
+    private var bluetoothAgent: BluetoothAgentProtocol?
+    private var networkAgent: NetworkAgentProtocol?
     
-    init() {
-        bluetoothManager = BluetoothAgent()
-        bluetoothManager.deviceDiscoveredSubject
+    private var lanFinished = false
+    private var btFinished = false
+    
+    private var foundBTDevices: [BluetoothDeviceModel] = []
+    private var foundLANDevices: [LanDeviceModel] = []
+    
+    init(btAgent: BluetoothAgentProtocol, lanAgent: NetworkAgentProtocol, coreDataStack: CoreDataStack) {
+        self.bluetoothAgent = btAgent
+        self.networkAgent = lanAgent
+        self.coreDataStack = coreDataStack
+        bluetoothAgent?.deviceDiscoveredSubject
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { [weak self] device in
-                self?.foundDevices.append(device)
+                self?.foundBTDevices.append(device)
+            })
+            .store(in: &cancellables)
+        
+        networkAgent?.deviceDiscoveredSubject
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] device in
+                self?.foundLANDevices.append(device)
             })
             .store(in: &cancellables)
     }
     
-    private func saveDeviceToCoreData(_ device: BluetoothDeviceModel) {
-        CoreDataStack.shared.saveDevice(device: device)
+    private func scanFinishedIfNeeded() {
+        guard lanFinished && btFinished else { return }
+        
+        do {
+            try coreDataStack.saveScanSession(
+                lanDevices: lanDevices,
+                bluetoothDevices: bluetoothDevices
+            )
+        } catch {
+            print("Не удалось сохранить сессию: \(error)")
+        }
     }
     
+    
     func startScanning() {
-        currentScanSession = ScanSession(context: CoreDataStack.shared.context)
-        currentScanSession?.timestamp = Date()
+        clearFoundDevices()
+        lanFinished = false
+        btFinished = false
+        isScanActive = true
+        bluetoothAgent?.startScanning()
+        networkAgent?.startScanning()
         
-        bluetoothManager.startScanning()
-        isScanActive.toggle()
-        
-        timer = Timer.publish(every: 15, on: .main, in: .common)
+        timer = Timer.publish(every: 3, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 self?.stopScanning()
             }
     }
     
+    private func clearFoundDevices() {
+        lanDevices.removeAll()
+        bluetoothDevices.removeAll()
+        foundBTDevices.removeAll()
+        foundLANDevices.removeAll()
+    }
+    
+    
     func stopScanning() {
-        bluetoothManager.stopScanning()
-        if let _ = self.currentScanSession {
-            CoreDataStack.shared.saveContext()
-        }
-        
-        self.devices = foundDevices
-        isScanActive.toggle()
-        
-        // Останавливаем таймер
+        bluetoothAgent?.stopScanning()
+        networkAgent?.stopScanning()
+        self.bluetoothDevices = foundBTDevices
+        self.lanDevices = foundLANDevices
+        lanFinished = true
+        btFinished = true
+        isScanActive = false
         timer?.cancel()
         timer = nil
+        scanFinishedIfNeeded()
     }
 }

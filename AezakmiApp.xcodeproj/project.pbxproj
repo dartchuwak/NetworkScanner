@@ -18,7 +18,7 @@
 		A3FAC1CB2ED891A4007DCCFC /* Exceptions for "AezakmiApp" folder in "AezakmiApp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Application/Info.plist,
 			);
 			target = A3FAC1AC2ED87D97007DCCFC /* AezakmiApp */;
 		};
@@ -31,6 +31,11 @@
 				A3FAC1CB2ED891A4007DCCFC /* Exceptions for "AezakmiApp" folder in "AezakmiApp" target */,
 			);
 			path = AezakmiApp;
+			sourceTree = "<group>";
+		};
+		A3FAC2CA2ED9BF05007DCCFC /* MMLanScan */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MMLanScan;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -50,6 +55,7 @@
 		A3FAC1A42ED87D97007DCCFC = {
 			isa = PBXGroup;
 			children = (
+				A3FAC2CA2ED9BF05007DCCFC /* MMLanScan */,
 				A3FAC1AF2ED87D97007DCCFC /* AezakmiApp */,
 				A3FAC1AE2ED87D97007DCCFC /* Products */,
 			);
@@ -80,6 +86,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				A3FAC1AF2ED87D97007DCCFC /* AezakmiApp */,
+				A3FAC2CA2ED9BF05007DCCFC /* MMLanScan */,
 			);
 			name = AezakmiApp;
 			packageProductDependencies = (
@@ -278,7 +285,7 @@
 				DEVELOPMENT_TEAM = UN5MX5RT64;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AezakmiApp/Info.plist;
+				INFOPLIST_FILE = AezakmiApp/Application/Info.plist;
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Это приложение использует Bluetooth для связи с внешними устройствами.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -301,6 +308,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "AezakmiApp/Application/AezakmiApp-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -317,7 +325,7 @@
 				DEVELOPMENT_TEAM = UN5MX5RT64;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AezakmiApp/Info.plist;
+				INFOPLIST_FILE = AezakmiApp/Application/Info.plist;
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Это приложение использует Bluetooth для связи с внешними устройствами.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -340,6 +348,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "AezakmiApp/Application/AezakmiApp-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;

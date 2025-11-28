@@ -9,11 +9,11 @@ import CoreData
 
 final class CoreDataStack {
     static let shared = CoreDataStack()
-
-    private(set) var container: NSPersistentContainer
+    
+    let container: NSPersistentContainer
     
     var context: NSManagedObjectContext {
-        return container.viewContext
+        container.viewContext
     }
     
     private init() {
@@ -25,27 +25,47 @@ final class CoreDataStack {
         }
     }
     
-    func saveDevice(device: BluetoothDeviceModel) {
-        let entity = BluetoothDeviceEntity(context: context)
-        entity.uuid = device.id
-        entity.name = device.name
-        entity.rssi = Int32(device.rssi)
-        entity.status = device.status.rawValue
-    }
-    
-    func save() {
-        
-    }
-    
-    func saveContext() {
-        let context = container.viewContext
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                let nserror = error as NSError
-                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
-            }
+    func saveContext(_ context: NSManagedObjectContext? = nil) {
+        let context = context ?? self.context
+        guard context.hasChanges else { return }
+        do {
+            try context.save()
+        } catch {
+            print("Ошибка сохранения контекста: \(error)")
         }
+    }
+}
+
+extension CoreDataStack {
+    
+    @discardableResult
+    func saveScanSession(
+        lanDevices: [LanDeviceModel],
+        bluetoothDevices: [BluetoothDeviceModel]
+    ) throws -> ScanSession {
+        
+        let session = ScanSession(context: context)
+        session.id = UUID()
+        session.timeStamp = Date()
+        
+        for lan in lanDevices {
+            let device = LanDeviceEntity(context: context)
+            device.name = lan.name
+            device.ip = lan.ipAdress
+            device.mac = lan.macAddress
+            device.scanSession = session
+        }
+        
+        for bt in bluetoothDevices {
+            let device = BluetoothDeviceEntity(context: context)
+            device.uuid = bt.uuid
+            device.name = bt.name
+            device.rssi = Int32(bt.rssi)
+            device.status = bt.status.rawValue
+            device.scanSession = session
+        }
+        
+        try context.save()
+        return session
     }
 }

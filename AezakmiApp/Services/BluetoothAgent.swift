@@ -7,17 +7,22 @@
 
 import CoreBluetooth
 import Combine
-import CoreData
 
-class BluetoothAgent: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+protocol BluetoothAgentProtocol {
+    var deviceDiscoveredSubject :PassthroughSubject<BluetoothDeviceModel, Never> { get }
+    var scanSessionSubject: PassthroughSubject<[BluetoothDeviceModel], Never> { get }
+    
+    func startScanning()
+    func stopScanning()
+}
+
+class BluetoothAgent: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, BluetoothAgentProtocol {
     
     private var centralManager: CBCentralManager!
     private var discoveredPeripheralsUUIDs = Set<UUID>()
     
     var deviceDiscoveredSubject = PassthroughSubject<BluetoothDeviceModel, Never>()
     var scanSessionSubject = PassthroughSubject<[BluetoothDeviceModel], Never>()
-    
-    private var currentScanSession: ScanSession?
     
     override init() {
         super.init()

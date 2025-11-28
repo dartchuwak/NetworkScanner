@@ -9,13 +9,15 @@ import SwiftUI
 
 struct RootView: View {
     
+    @EnvironmentObject var container: AppContainer
+    
     @State private var animationPlayed: Bool = false
     var body: some View {
         if !animationPlayed {
             LoadingView(isAnimationPlayed: $animationPlayed)
         } else {
             TabView {
-                ScannerView()
+                ScannerView(scannerViewModel: container.scannerViewModel)
                     .tabItem {
                         VStack {
                             Image(systemName: "wifi")
@@ -32,8 +34,4 @@ struct RootView: View {
             }
         }
     }
-}
-
-#Preview {
-    RootView()
 }

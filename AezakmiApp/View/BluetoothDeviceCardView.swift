@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DeviceCardView: View {
+struct BluetoothDeviceCardView: View {
     var device: BluetoothDeviceModel
     
     var body: some View {
