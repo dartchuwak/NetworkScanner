@@ -24,7 +24,7 @@ struct RootView: View {
                             Text("Сканирование")
                         }
                     }
-                HistoryView()
+                SessionsHistoryView()
                     .tabItem {
                         VStack {
                             Image(systemName: "folder")
