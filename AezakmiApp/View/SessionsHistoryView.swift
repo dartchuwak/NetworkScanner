@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct SessionsHistoryView: View {
+    
+    @ObservedObject var sessionHistoryViewModel: SessionHistoryViewModel
     @Environment(\.managedObjectContext) private var context
     @FetchRequest(sortDescriptors: [SortDescriptor(\ScanSession.timeStamp, order: .reverse)])
     private var sessions: FetchedResults<ScanSession>

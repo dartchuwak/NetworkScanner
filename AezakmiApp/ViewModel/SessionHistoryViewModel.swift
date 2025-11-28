@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-final class SessionHistoryViewModel: ObservableObject {
+final class HistorySessionViewModel: ObservableObject {
     
     @Published private(set) var sessions: [ScanSession] = []
     @Published var sortOption: SessionsSortOption = .dateDesc
