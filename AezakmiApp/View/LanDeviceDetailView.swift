@@ -10,10 +10,10 @@ import SwiftUI
 struct LanDeviceDetailView: View {
     let device: LanDeviceModel
     var body: some View {
-        VStack {
-            Text(device.id)
-            Text(device.name)
-            Text(device.macAddress)
+        VStack(alignment: .leading) {
+            Text("IP-адрес устройства: \(device.ipAdress)")
+            Text("Имя устройства: \(device.name)")
+            Text("MAC-адрес устройства: \(device.macAddress)")
         }
     }
 }

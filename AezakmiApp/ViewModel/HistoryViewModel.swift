@@ -32,12 +32,9 @@ final class HistoryViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    private func reloadSessions() {
+    func reloadSessions() {
         do {
-            sessions = try repository.fetchSessions(
-                sort: sortOption,
-                searchText: searchText
-            )
+            sessions = try repository.fetchSessions(sort: sortOption)
         } catch {
             print("Ошибка загрузки сессий: \(error)")
             sessions = []

@@ -15,15 +15,24 @@ struct HistoryView: View {
             List {
                 ForEach(viewModel.sessions, id: \.objectID) { session in
                     NavigationLink {
-                        SessionDetailEntryView(session: session)
+                        SessionDetailCardView(session: session)
                     } label: {
                         VStack(alignment: .leading) {
-                            Text(session.timeStamp ?? Date(), style: .date)
+                            HStack {
+                                Text(session.timeStamp ?? Date(), style: .date)
+                                Text(session.timeStamp ?? Date(), style: .time)
+                            }
                             Text("LAN: \((session.lanDevices as? Set<LanDeviceEntity>)?.count ?? 0)")
                             Text("BT: \((session.bluetoothDevices as? Set<BluetoothDeviceEntity>)?.count ?? 0)")
                         }
                     }
                 }
+            }
+            .onAppear {
+                viewModel.reloadSessions()
+            }
+            .refreshable {
+                viewModel.reloadSessions()
             }
             .navigationTitle("Сессии")
             .toolbar {
@@ -37,19 +46,7 @@ struct HistoryView: View {
                     Image(systemName: "arrow.up.arrow.down")
                 }
             }
-            .searchable(text: $viewModel.searchText,
-                        prompt: "Имя / IP / UUID")
         }
     }
 }
 
-struct SessionDetailEntryView: View {
-    @EnvironmentObject var container: AppContainer
-    let session: ScanSession
-    
-    var body: some View {
-        SessionDetailView(
-            viewModel: container.makeSessionDetailViewModel(session: session)
-        )
-    }
-}

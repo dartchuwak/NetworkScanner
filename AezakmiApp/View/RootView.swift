@@ -10,14 +10,14 @@ import SwiftUI
 struct RootView: View {
     
     @EnvironmentObject var container: AppContainer
-    @State private var animationPlayed = false
+    @State private var isAnimationPlayed = false
     
     var body: some View {
-        if !animationPlayed {
-            LoadingView(isAnimationPlayed: $animationPlayed)
+        if !isAnimationPlayed {
+            LoadingView(isAnimationPlayed: $isAnimationPlayed)
         } else {
             TabView {
-                ScannerView(scannerViewModel: container.makeScannerViewModel())
+                ScannerView(viewModel: container.makeScannerViewModel())
                     .tabItem {
                         Image(systemName: "wifi")
                         Text("Сканирование")

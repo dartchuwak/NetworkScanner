@@ -14,9 +14,11 @@ final class ScannerViewModel: ObservableObject {
     @Published var bluetoothDevices: [BluetoothDeviceModel] = []
     @Published var lanDevices: [LanDeviceModel] = []
     @Published var isScanActive: Bool = false
+    @Published var showScanerAnimationView: Bool = false
     @Published private(set) var devicesCount: Int = 0
     @Published var bluetoothError: BluetoothError?
     @Published var lanError: LanError?
+    @Published var scanProgress: CGFloat = 0
     
     // MARK: - Private Properties
     private let scanSessionRepository: ScanSessionRepositoryProtocol
@@ -25,6 +27,9 @@ final class ScannerViewModel: ObservableObject {
     
     private var cancellables: Set<AnyCancellable> = []
     
+    private var progressTimer: AnyCancellable?
+    private var scanStartDate: Date?
+    private var scanDuration: TimeInterval = 0
     private var lanFinished = false
     private var btFinished = false
     
@@ -73,22 +78,22 @@ final class ScannerViewModel: ObservableObject {
         
         // MARK: - Error Streams
         btRepository.errorStream
-                    .receive(on: DispatchQueue.main)
-                    .sink { [weak self] error in
-                        self?.bluetoothError = error
-                        self?.isScanActive = false
-                        print(error.localizedDescription)
-                    }
-                    .store(in: &cancellables)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] error in
+                self?.bluetoothError = error
+                self?.isScanActive = false
+                print(error.localizedDescription)
+            }
+            .store(in: &cancellables)
         
         lanRepository.errorStream
-                    .receive(on: DispatchQueue.main)
-                    .sink { [weak self] error in
-                        self?.lanError = error
-                        self?.isScanActive = false
-                        print(error.localizedDescription)
-                    }
-                    .store(in: &cancellables)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] error in
+                self?.lanError = error
+                self?.isScanActive = false
+                print(error.localizedDescription)
+            }
+            .store(in: &cancellables)
     }
     
     func startScanning(timeout: TimeInterval) {
@@ -96,6 +101,27 @@ final class ScannerViewModel: ObservableObject {
         lanDevices = []
         devicesCount = 0
         isScanActive = true
+        showScanerAnimationView = true
+        
+        scanStartDate = Date()
+        scanDuration = timeout
+        
+        progressTimer?.cancel()
+        progressTimer = Timer
+            .publish(every: 0.05, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] now in
+                guard let self,
+                      let start = self.scanStartDate else { return }
+                
+                let elapsed = now.timeIntervalSince(start)
+                let progress = min(elapsed / self.scanDuration, 1)
+                self.scanProgress = CGFloat(progress)
+                
+                if progress >= 1 {
+                    self.progressTimer?.cancel()
+                }
+            }
         
         btRepository.startScanning(timeout: timeout)
         lanRepository.startScanning(timeout: timeout)
@@ -104,16 +130,22 @@ final class ScannerViewModel: ObservableObject {
     func stopScanning() {
         btRepository.stopScanning()
         lanRepository.stopScanning()
+        progressTimer?.cancel()
+        progressTimer = nil
+        scanProgress = 1
     }
     
     private func saveCurrentSession() {
-        do {
-            try scanSessionRepository.saveSession(
-                lanDevices: lanDevices,
-                btDevices: bluetoothDevices
-            )
-        } catch {
-            print("Не удалось сохранить сессию: \(error)")
+        
+        let lan = lanDevices
+        let bt  = bluetoothDevices
+        
+        Task {
+            do {
+                try await scanSessionRepository.saveSessionAsync(lanDevices:lan, btDevices: bt)
+            } catch {
+                print("Не удалось сохранить сессию: \(error)")
+            }
         }
     }
 }

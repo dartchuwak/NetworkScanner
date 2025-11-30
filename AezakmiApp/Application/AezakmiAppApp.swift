@@ -17,7 +17,10 @@ struct AezakmiAppApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(container)
-                .environment(\.managedObjectContext, container.coreDataStack.context)
+                .environment(\.managedObjectContext, container.coreDataStack.viewContext)
+                .onAppear {
+                  //  try? container.coreDataStack.deleteAllData()
+                }
         }
     }
 }

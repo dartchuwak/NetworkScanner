@@ -10,49 +10,29 @@ import CoreData
 import Combine
 
 protocol ScanSessionRepositoryProtocol {
-    // var errorStream: PassthroughSubject<Error, Never> { get }
-    
-    func saveSession(lanDevices: [LanDeviceModel], btDevices: [BluetoothDeviceModel]) throws
-    func fetchSessions(sort: SessionsSortOption,searchText: String) throws -> [ScanSession]
+    func saveSessionAsync(lanDevices: [LanDeviceModel], btDevices: [BluetoothDeviceModel]) async throws
+    func fetchSessions(sort: SessionsSortOption) throws -> [ScanSession]
     func fetchDevices(session: ScanSession, lanSort: LanSortOption, searchText: String) -> AnyPublisher<([BluetoothDeviceModel],[LanDeviceModel]), Error>
 }
 
 final class ScanSessionRepository: ScanSessionRepositoryProtocol {
     
     private let coreDataStack: CoreDataStack
-    private var context: NSManagedObjectContext {
-        coreDataStack.context
-    }
-    
-    //    var errorStream = PassthroughSubject<any Error, Never> {
-    //
-    //    }()
     
     init(coreDataStack: CoreDataStack = .shared) {
         self.coreDataStack = coreDataStack
     }
     
-    // MARK: Save
-    
-    func saveSessionPublisher(lanDevices: [LanDeviceModel], btDevices: [BluetoothDeviceModel]) -> AnyPublisher<Void, Error> {
-        
-        let ctx = coreDataStack.context
-        
-        return Deferred {
-            Future<Void, Error> { [weak self] promise in
-                guard let self else {
-                    let error = NSError(domain: "ScanSessionRepository",
-                                        code: -1,
-                                        userInfo: [NSLocalizedDescriptionKey: "Deallocated"])
-                    promise(.failure(error))
-                    return
-                }
-                
-                ctx.perform {
+    // MARK: - Save
+    func saveSessionAsync(lanDevices: [LanDeviceModel], btDevices: [BluetoothDeviceModel]) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            coreDataStack.performBackground { ctx in
+                do {
                     let session = ScanSession(context: ctx)
                     session.id = UUID()
                     session.timeStamp = Date()
                     
+                    // LAN
                     for lan in lanDevices {
                         let entity = LanDeviceEntity(context: ctx)
                         entity.name = lan.name
@@ -61,6 +41,7 @@ final class ScanSessionRepository: ScanSessionRepositoryProtocol {
                         entity.scanSession = session
                     }
                     
+                    // BT
                     for bt in btDevices {
                         let entity = BluetoothDeviceEntity(context: ctx)
                         entity.uuid = UUID(uuidString: bt.uuid)
@@ -70,62 +51,21 @@ final class ScanSessionRepository: ScanSessionRepositoryProtocol {
                         entity.scanSession = session
                     }
                     
-                    do {
-                        try self.coreDataStack.saveContext(ctx)
-                        promise(.success(()))
-                    } catch {
-                        promise(.failure(error))
+                    if ctx.hasChanges {
+                        try ctx.save()
                     }
+                    
+                    continuation.resume(returning: ())
+                } catch {
+                    continuation.resume(throwing: error)
                 }
             }
         }
-        .eraseToAnyPublisher()
-    }
-    
-    func saveSession(lanDevices: [LanDeviceModel], btDevices: [BluetoothDeviceModel]) throws {
-        let context = context
-        
-        let session = ScanSession(context: context)
-        session.id = UUID()
-        session.timeStamp = Date()
-        
-        // LAN
-        for lan in lanDevices {
-            let entity = LanDeviceEntity(context: context)
-            entity.name = lan.name
-            entity.ip = lan.ipAdress
-            entity.mac = lan.macAddress
-            entity.scanSession = session
-        }
-        
-        // BT
-        for bt in btDevices {
-            let entity = BluetoothDeviceEntity(context: context)
-            entity.uuid = UUID(uuidString: bt.uuid)
-            entity.name = bt.name
-            entity.rssi = Int32(bt.rssi)
-            entity.status = bt.state
-            entity.scanSession = session
-        }
-        try coreDataStack.saveContext(context)
     }
     
     // MARK: Fetch sessions
-    
-    func fetchSessions(sort: SessionsSortOption, searchText: String) throws -> [ScanSession] {
+    func fetchSessions(sort: SessionsSortOption) throws -> [ScanSession] {
         let request: NSFetchRequest<ScanSession> = ScanSession.fetchRequest()
-        
-        var predicates: [NSPredicate] = []
-        
-        if !searchText.isEmpty {
-            let pLan = NSPredicate(format: "ANY lanDevices.name CONTAINS[cd] %@ OR ANY lanDevices.ip CONTAINS[cd] %@", searchText, searchText)
-            let pBt  = NSPredicate(format: "ANY bluetoothDevices.name CONTAINS[cd] %@ OR ANY bluetoothDevices.uuid CONTAINS[cd] %@", searchText, searchText)
-            predicates.append(NSCompoundPredicate(orPredicateWithSubpredicates: [pLan, pBt]))
-        }
-        
-        if !predicates.isEmpty {
-            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        }
         
         switch sort {
         case .dateDesc:
@@ -133,12 +73,12 @@ final class ScanSessionRepository: ScanSessionRepositoryProtocol {
         case .dateAsc:
             request.sortDescriptors = [NSSortDescriptor(key: "timeStamp", ascending: true)]
         }
+        let scanSession = try coreDataStack.viewContext.fetch(request)
         
-        return try context.fetch(request)
+        return scanSession
     }
     
     // MARK: Fetch devices for session
-    
     func fetchDevices(session: ScanSession, lanSort: LanSortOption, searchText: String) -> AnyPublisher<([BluetoothDeviceModel],[LanDeviceModel]), Error> {
         let lanPublisher = fetchLanDevices(session: session,sort: lanSort,searchText: searchText)
         let btPublisher = fetchBtDevices(session: session,searchText: searchText)
@@ -156,7 +96,7 @@ final class ScanSessionRepository: ScanSessionRepositoryProtocol {
                     return
                 }
                 
-                self.context.perform {
+                coreDataStack.viewContext.perform {
                     let request: NSFetchRequest<LanDeviceEntity> = LanDeviceEntity.fetchRequest()
                     
                     var predicates: [NSPredicate] = [
@@ -192,7 +132,7 @@ final class ScanSessionRepository: ScanSessionRepositoryProtocol {
                     }
                     
                     do {
-                        let entities = try self.context.fetch(request)
+                        let entities = try self.coreDataStack.viewContext.fetch(request)
                         
                         let models = entities.map { entity in
                             LanDeviceModel(
@@ -223,7 +163,7 @@ final class ScanSessionRepository: ScanSessionRepositoryProtocol {
                     return
                 }
                 
-                self.context.perform {
+                self.coreDataStack.viewContext.perform {
                     let request: NSFetchRequest<BluetoothDeviceEntity> = BluetoothDeviceEntity.fetchRequest()
                     
                     var predicates: [NSPredicate] = [
@@ -247,7 +187,7 @@ final class ScanSessionRepository: ScanSessionRepositoryProtocol {
                     ]
                     
                     do {
-                        let entities = try self.context.fetch(request)
+                        let entities = try self.coreDataStack.viewContext.fetch(request)
                         
                         let models = entities.map { entity in
                             BluetoothDeviceModel(

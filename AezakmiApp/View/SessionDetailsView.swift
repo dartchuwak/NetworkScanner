@@ -9,63 +9,55 @@ import SwiftUI
 
 struct SessionDetailView: View {
     @ObservedObject var viewModel: SessionDetailViewModel
+    let sessionDate: Date
     
     var body: some View {
-        List {
-            Section {
-                Picker("Тип устройств", selection: $viewModel.filter) {
+        ScrollView {
+            VStack {
+                Picker("Тип устройств", selection: $viewModel.deviceTypeFilter) {
                     ForEach(DeviceType.allCases) { type in
                         Text(type.rawValue).tag(type)
                     }
                 }
                 .pickerStyle(.segmented)
-            }
-            
-            if viewModel.filter == .lan {
-                Section {
+                
+                if viewModel.deviceTypeFilter == .lan {
                     Picker("Сортировка LAN", selection: $viewModel.lanSort) {
                         ForEach(LanSortOption.allCases) { option in
                             Text(option.rawValue).tag(option)
                         }
                     }
                     .pickerStyle(.segmented)
+                    
+                    Section("LAN") {
+                        ForEach(viewModel.lanDevices) { device in
+                            NavigationLink {
+                                LanDeviceDetailView(device: device)
+                            } label: {
+                                LanDeviceCardView(device: device)
+                                    .padding(.horizontal)
+                            }
+                        }
+                    }
                 }
             }
             
-//            if viewModel.filter == .all || viewModel.filter == .lan {
-//                Section("LAN") {
-//                    ForEach(viewModel.lanDevices, id: \.self) { device in
-//                        NavigationLink {
-//                            LanDeviceDetailView(device: device)
-//                        } label: {
-//                            VStack(alignment: .leading) {
-//                                Text(device.name ?? "No Name")
-//                                    .font(.headline)
-//                                Text("IP: \(device.ip)")
-//                                Text("MAC: \(device.mac)")
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-            
-            if viewModel.filter == .bt {
+            if viewModel.deviceTypeFilter == .bt {
                 Section("Bluetooth") {
                     ForEach(viewModel.btDevices) { device in
                         NavigationLink {
                             BluetoothDeviceDetailView(device: device)
                         } label: {
                             VStack(alignment: .leading) {
-                                Text(device.name)
-                                Text(device.uuid)
-                                Text(device.rssi.description)
+                                BluetoothDeviceCardView(device: device)
+                                    .padding(.horizontal)
                             }
                         }
                     }
                 }
             }
         }
-        .navigationTitle("Сессия")
-        .searchable(text: $viewModel.searchText, prompt: "Имя / IP / UUID")
+        .padding(.horizontal)
+        .navigationTitle(sessionDate.formatted(date: .abbreviated, time: .standard))
     }
 }

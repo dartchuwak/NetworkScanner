@@ -64,8 +64,23 @@ final class BluetoothRepository: BluetoothRepositoryProtocol {
             name: device.name ?? "Неизвестное устройство",
             rssi: RSSI,
             uuid: device.identifier.uuidString,
-            state: device.state.rawValue.description
+            state: mapState(device.state)
         )
+    }
+    
+    private func mapState(_ state: CBPeripheralState) -> String {
+        switch state {
+        case .disconnected:
+            return "Отключено"
+        case .connecting:
+            return "Подключается"
+        case .connected:
+            return "Подключено"
+        case .disconnecting:
+            return "Отключается"
+        @unknown default:
+            return "Неизвестное состояние"
+        }
     }
     
     // MARK: Protocol Methods

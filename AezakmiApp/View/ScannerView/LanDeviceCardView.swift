@@ -23,6 +23,8 @@ struct LanDeviceCardView: View {
                 .foregroundColor(.gray)
             
             Text("MAC: \(device.macAddress)")
+                .font(.subheadline)
+                .foregroundColor(.gray)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

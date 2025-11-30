@@ -22,17 +22,17 @@ struct BluetoothDeviceCardView: View {
                 Spacer()
                 
                 Text("RSSI: \(device.rssi)")
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundColor(.gray)
             }
             
             Text("UUID: \(device.uuid)")
+                .font(.caption)
+                .foregroundColor(.gray)
             
             Text("Статус: \(device.state)")
                 .font(.subheadline)
                 .foregroundColor(.gray)
-            
-            Divider()
         }
         .padding()
         .background(Color.white)

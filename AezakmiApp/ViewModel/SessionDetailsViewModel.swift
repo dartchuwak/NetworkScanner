@@ -10,7 +10,7 @@ import Combine
 
 final class SessionDetailViewModel: ObservableObject {
     
-    @Published var filter: DeviceType = .lan
+    @Published var deviceTypeFilter: DeviceType = .lan
     @Published var lanSort: LanSortOption = .name
     @Published var searchText: String = ""
     
@@ -29,7 +29,7 @@ final class SessionDetailViewModel: ObservableObject {
     }
     
     private func setupBindings() {
-        Publishers.CombineLatest3($filter, $lanSort, $searchText)
+        Publishers.CombineLatest3($deviceTypeFilter, $lanSort, $searchText)
             .debounce(for: .milliseconds(150), scheduler: RunLoop.main)
             .sink { [weak self] _, _, _ in
                 self?.loadDevices()
