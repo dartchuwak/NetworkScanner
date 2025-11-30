@@ -42,7 +42,6 @@ final class ScannerViewModel: ObservableObject {
         bind()
     }
     
-    
     private func bind() {
         //MARK: - Devices Streasm
         btRepository.deviceStream
