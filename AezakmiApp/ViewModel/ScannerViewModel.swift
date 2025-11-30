@@ -11,14 +11,13 @@ import Combine
 final class ScannerViewModel: ObservableObject {
     
     // MARK: - Published Properties
-    @Published var bluetoothDevices: [BluetoothDeviceModel] = []
-    @Published var lanDevices: [LanDeviceModel] = []
-    @Published var isScanActive: Bool = false
-    @Published var showScanerAnimationView: Bool = false
+    @Published private(set)var bluetoothDevices: [BluetoothDeviceModel] = []
+    @Published private(set)var lanDevices: [LanDeviceModel] = []
+    @Published private(set)var isScanActive: Bool = false
     @Published private(set) var devicesCount: Int = 0
-    @Published var bluetoothError: BluetoothError?
-    @Published var lanError: LanError?
-    @Published var scanProgress: CGFloat = 0
+    @Published private(set)var scanProgress: CGFloat = 0
+    @Published var scanError: ScanError?
+    @Published var showScanerAnimationView: Bool = false
     
     // MARK: - Private Properties
     private let scanSessionRepository: ScanSessionRepositoryProtocol
@@ -30,8 +29,6 @@ final class ScannerViewModel: ObservableObject {
     private var progressTimer: AnyCancellable?
     private var scanStartDate: Date?
     private var scanDuration: TimeInterval = 0
-    private var lanFinished = false
-    private var btFinished = false
     
     // MARK: - INIT
     init(
@@ -80,18 +77,21 @@ final class ScannerViewModel: ObservableObject {
         btRepository.errorStream
             .receive(on: DispatchQueue.main)
             .sink { [weak self] error in
-                self?.bluetoothError = error
+                self?.stopScanning()
+                self?.scanError = .bluetooth(error)
                 self?.isScanActive = false
-                print(error.localizedDescription)
+                self?.showScanerAnimationView = false
             }
             .store(in: &cancellables)
         
         lanRepository.errorStream
             .receive(on: DispatchQueue.main)
             .sink { [weak self] error in
-                self?.lanError = error
+                self?.stopScanning()
+                self?.scanError = .lan(error)
                 self?.isScanActive = false
-                print(error.localizedDescription)
+                self?.showScanerAnimationView = false
+               
             }
             .store(in: &cancellables)
     }

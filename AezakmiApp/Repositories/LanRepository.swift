@@ -20,8 +20,6 @@ protocol LanRepositoryProtocol {
 final class LanRepository: LanRepositoryProtocol {
     
     private let agent: NetworkAgentProtocol
-    private let deviceStreamSubject = PassthroughSubject<LanDeviceModel, Never>()
-    private var cancellables = Set<AnyCancellable>()
     
     var deviceStream: AnyPublisher<LanDeviceModel, Never> {
         agent.deviceDiscoveredSubject

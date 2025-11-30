@@ -7,10 +7,14 @@
 
 import Foundation
 
-enum LanError: LocalizedError {
+enum LanError: LocalizedError, Identifiable {
     case unauthorized
     case unsupported
     case unknownState
+    case netoworkNotAvailable
+    case wifiNotConnected
+    
+    var id: String { localizedDescription }
     
     var errorDescription: String? {
         switch self {
@@ -20,6 +24,10 @@ enum LanError: LocalizedError {
             return "LAN не поддерживается на этом устройстве."
         case .unknownState:
             return "Неизвестное состояние LAN."
+        case .netoworkNotAvailable:
+            return "Нет доступо к сети"
+        case .wifiNotConnected:
+            return "WiFI не подключен"
         }
     }
 }

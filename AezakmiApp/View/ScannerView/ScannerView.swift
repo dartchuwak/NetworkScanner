@@ -30,7 +30,17 @@ struct ScannerView: View {
                     .transition(.opacity)
                 }
             }
+            .alert(item: $viewModel.scanError) { error in
+                Alert(
+                    title: Text(error.title),
+                    message: Text(error.localizedDescription),
+                    dismissButton: .default(Text("ОК")) {
+                        viewModel.scanError = nil
+                    }
+                )
+            }
         }
+        
     }
 }
 

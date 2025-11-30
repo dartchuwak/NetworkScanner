@@ -11,7 +11,7 @@ struct LanDeviceDetailView: View {
     let device: LanDeviceModel
     var body: some View {
         VStack(alignment: .leading) {
-            Text("IP-адрес устройства: \(device.ipAdress)")
+            Text("IP-адрес устройства: \(device.ipAddress)")
             Text("Имя устройства: \(device.name)")
             Text("MAC-адрес устройства: \(device.macAddress)")
         }

@@ -7,11 +7,13 @@
 
 import Foundation
 
-enum BluetoothError: LocalizedError {
+enum BluetoothError: LocalizedError, Identifiable {
     case poweredOff
     case unauthorized
     case unsupported
     case unknownState
+    
+    var id: String { localizedDescription }
     
     var errorDescription: String? {
         switch self {

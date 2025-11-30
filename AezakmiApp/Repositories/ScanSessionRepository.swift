@@ -36,7 +36,7 @@ final class ScanSessionRepository: ScanSessionRepositoryProtocol {
                     for lan in lanDevices {
                         let entity = LanDeviceEntity(context: ctx)
                         entity.name = lan.name
-                        entity.ip = lan.ipAdress
+                        entity.ip = lan.ipAddress
                         entity.mac = lan.macAddress
                         entity.scanSession = session
                     }

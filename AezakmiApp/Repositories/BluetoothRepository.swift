@@ -22,8 +22,6 @@ final class BluetoothRepository: BluetoothRepositoryProtocol {
     
     // MARK: Private properties
     private let agent: BluetoothAgentProtocol
-    private let deviceStreamSubject = PassthroughSubject<BluetoothDeviceModel, Never>()
-    private var cancellables = Set<AnyCancellable>()
     
     // MARK: Protocol properties
     var deviceStream: AnyPublisher<BluetoothDeviceModel, Never> {

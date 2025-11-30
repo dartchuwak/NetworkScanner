@@ -12,7 +12,7 @@ struct LanDeviceCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(device.ipAdress)
+            Text(device.ipAddress)
                 .font(.title2)
                 .fontWeight(.semibold)
                 .foregroundColor(.black)
