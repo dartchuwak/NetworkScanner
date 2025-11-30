@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-final class SessionHistoryViewModel: ObservableObject {
+final class HistoryViewModel: ObservableObject {
     
     @Published private(set) var sessions: [ScanSession] = []
     @Published var sortOption: SessionsSortOption = .dateDesc
@@ -19,7 +19,6 @@ final class SessionHistoryViewModel: ObservableObject {
     
     init(repository: ScanSessionRepositoryProtocol) {
         self.repository = repository
-        
         setupBindings()
         reloadSessions()
     }

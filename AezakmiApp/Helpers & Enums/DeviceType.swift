@@ -7,13 +7,14 @@
 
 import Foundation
 
-enum  DeviceType: String, CaseIterable {
-    case bt = "Bluetooth"
-    case lan = "LAN"
+enum SessionsSortOption: String, CaseIterable, Identifiable {
+    case dateDesc = "По дате (новые сверху)"
+    case dateAsc  = "По дате (старые сверху)"
+    
+    var id: Self { self }
 }
 
-enum DeviceTypeSort: String, CaseIterable, Identifiable {
-    case all = "Все"
+enum DeviceType: String, CaseIterable, Identifiable {
     case lan = "LAN"
     case bt  = "Bluetooth"
     

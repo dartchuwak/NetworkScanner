@@ -10,16 +10,42 @@ import Combine
 
 final class AppContainer: ObservableObject {
     
+    // Низкоуровневый стек
     let coreDataStack = CoreDataStack.shared
     
-    lazy var bluetoothAgent: BluetoothAgentProtocol = BluetoothAgent()
-    lazy var networkAgent: NetworkAgentProtocol = NetworkAgent()
-    
-    lazy var scannerViewModel: ScannerViewModel = {
-        ScannerViewModel(
-            btAgent: bluetoothAgent,
-            lanAgent: networkAgent,
-            coreDataStack: coreDataStack
-        )
+    // Репо
+    lazy var scanSessionRepository: ScanSessionRepositoryProtocol = {
+        ScanSessionRepository(coreDataStack: coreDataStack)
     }()
+    
+    lazy var bluetoothRepository: BluetoothRepositoryProtocol = {
+        BluetoothRepository(agent: bluetoothAgent)
+    }()
+    
+    lazy var lanRepository: LanRepositoryProtocol = {
+        LanRepository(agent: lanAgent)
+    }()
+    
+    // Агенты
+    lazy var bluetoothAgent: BluetoothAgentProtocol = BluetoothAgent()
+    lazy var lanAgent: NetworkAgentProtocol = NetworkAgent()
+    
+    // Фабрики ViewModel
+    
+    func makeScannerViewModel() -> ScannerViewModel {
+        ScannerViewModel(scanSessionRepository: scanSessionRepository,
+                         btRepository: bluetoothRepository,
+                         lanRepository: lanRepository)
+    }
+    
+    func makeHistoryViewModel() -> HistoryViewModel {
+        HistoryViewModel(repository: scanSessionRepository)
+    }
+    
+    func makeSessionDetailViewModel(session: ScanSession) -> SessionDetailViewModel {
+        SessionDetailViewModel(
+            session: session,
+            repository: scanSessionRepository
+        )
+    }
 }

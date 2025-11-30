@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24411" systemVersion="25B78" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="BluetoothDeviceEntity" representedClassName="BluetoothDeviceEntity" syncable="YES" codeGenerationType="class">
-        <attribute name="name" optional="YES" attributeType="String"/>
-        <attribute name="rssi" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="status" optional="YES" attributeType="String"/>
-        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="rssi" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="status" attributeType="String"/>
+        <attribute name="uuid" attributeType="UUID" usesScalarValueType="NO"/>
         <relationship name="scanSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ScanSession" inverseName="bluetoothDevices" inverseEntity="ScanSession"/>
     </entity>
     <entity name="LanDeviceEntity" representedClassName="LanDeviceEntity" syncable="YES" codeGenerationType="class">
-        <attribute name="ip" optional="YES" attributeType="String"/>
-        <attribute name="mac" optional="YES" attributeType="String"/>
-        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="ip" attributeType="String"/>
+        <attribute name="mac" attributeType="String"/>
+        <attribute name="name" attributeType="String"/>
         <relationship name="scanSession" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ScanSession" inverseName="lanDevices" inverseEntity="ScanSession"/>
     </entity>
     <entity name="ScanSession" representedClassName="ScanSession" syncable="YES" codeGenerationType="class">
-        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="timeStamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="timeStamp" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="bluetoothDevices" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="BluetoothDeviceEntity" inverseName="scanSession" inverseEntity="BluetoothDeviceEntity"/>
         <relationship name="lanDevices" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="LanDeviceEntity" inverseName="scanSession" inverseEntity="LanDeviceEntity"/>
     </entity>

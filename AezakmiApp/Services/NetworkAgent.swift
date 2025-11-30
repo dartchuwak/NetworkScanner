@@ -9,58 +9,68 @@ import Foundation
 import Combine
 
 protocol NetworkAgentProtocol {
-    var deviceDiscoveredSubject: PassthroughSubject<LanDeviceModel, Never> { get}
-    var didFinishScanning: PassthroughSubject<Void, Never> { get }
+    var deviceDiscoveredSubject: PassthroughSubject<MMDevice, Never> { get}
+    var didFinishScanning: PassthroughSubject<Bool, Never> { get }
+    var errorSubject: PassthroughSubject<LanError, Never> { get }
     
-    func startScanning()
+    func startScanning(timeout: TimeInterval?)
     func stopScanning()
 }
 
 final class NetworkAgent: NSObject, MMLANScannerDelegate, NetworkAgentProtocol {
     
+    // MARK: - Private Properties
+    private var isScanning: Bool = false
     private var lanScanner : MMLANScanner!
     private var discoveredDevicesUUIDs = Set<String>()
     
-    var deviceDiscoveredSubject = PassthroughSubject<LanDeviceModel, Never>()
-    var didFinishScanning = PassthroughSubject<Void, Never>()
+    // MARK: - Protocol Properties
+    var deviceDiscoveredSubject = PassthroughSubject<MMDevice, Never>()
+    var didFinishScanning = PassthroughSubject<Bool, Never>()
+    var errorSubject =  PassthroughSubject<LanError, Never>()
     
     override init() {
         super.init()
         self.lanScanner = MMLANScanner(delegate:self)
     }
     
+    // MARK: - MMLANScannerDelegate
     func lanScanDidFindNewDevice(_ device: MMDevice!) {
         guard let ip = device.ipAddress else { return }
         if !discoveredDevicesUUIDs.contains(ip) {
-            let lanDevice = LanDeviceModel(name: device.hostname ?? "Неизвестное устройство",
-                                           ipAdress: device.ipAddress ?? "IP-адресс неизвестен",
-                                           macAddress: device.macAddress ?? "MAC-адресс неизвестен")
             discoveredDevicesUUIDs.insert(ip)
-            deviceDiscoveredSubject.send(lanDevice)
+            deviceDiscoveredSubject.send(device)
         }
     }
     
     func lanScanDidFinishScanning(with status: MMLanScannerStatus) {
-        DispatchQueue.main.async {
-            self.didFinishScanning.send()
-        }
-        
+        self.isScanning = false
+        self.didFinishScanning.send(true)
     }
     
     func lanScanDidFailedToScan() {
-        
+        self.errorSubject.send(.unknownState)
     }
     
     func lanScanProgressPinged(_ pingedHosts: Float, from overallHosts: Int) {
-        
     }
     
-    func startScanning() {
+    // MARK: - Protocol Methods
+    func startScanning(timeout: TimeInterval? = nil) {
+        guard !isScanning else { return }
+        isScanning = true
         discoveredDevicesUUIDs.removeAll()
         self.lanScanner.start()
+        
+        if let timeout {
+            DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
+                self?.stopScanning()
+            }
+        }
     }
     
     func stopScanning() {
+        guard isScanning else { return}
         self.lanScanner.stop()
     }
 }

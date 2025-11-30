@@ -9,72 +9,91 @@ import CoreBluetooth
 import Combine
 
 protocol BluetoothAgentProtocol {
-    var deviceDiscoveredSubject :PassthroughSubject<BluetoothDeviceModel, Never> { get }
-    var scanSessionSubject: PassthroughSubject<[BluetoothDeviceModel], Never> { get }
+    var discoveredDevice :PassthroughSubject<(CBPeripheral, Int), Never> { get }
+    var didFinishScanning: PassthroughSubject<Bool, Never> { get }
+    var errorSubject: PassthroughSubject<BluetoothError, Never> { get }
     
-    func startScanning()
+    func startScanning(timeout: TimeInterval?)
     func stopScanning()
 }
 
 class BluetoothAgent: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, BluetoothAgentProtocol {
-    
+    // MARK: - Dependenties
     private var centralManager: CBCentralManager!
+    
+    // MARK: - Private properties
+    private var isScanning = false
     private var discoveredPeripheralsUUIDs = Set<UUID>()
     
-    var deviceDiscoveredSubject = PassthroughSubject<BluetoothDeviceModel, Never>()
-    var scanSessionSubject = PassthroughSubject<[BluetoothDeviceModel], Never>()
+    // MARK: - Protcol Properties
+    var discoveredDevice = PassthroughSubject<(CBPeripheral, Int), Never>()
+    var didFinishScanning = PassthroughSubject<Bool, Never>()
+    var errorSubject = PassthroughSubject<BluetoothError, Never>()
     
     override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
-    func startScanning() {
+    // MARK: - Protcol Methods
+    func startScanning(timeout: TimeInterval? = nil) {
+        
         guard centralManager.state == .poweredOn else {
-            print("Bluetooth не включен.")
+            let error: BluetoothError
+            switch centralManager.state {
+            case .poweredOff:
+                error = .poweredOff
+            case .unauthorized:
+                error = .unauthorized
+            case .unsupported:
+                error = .unsupported
+            default:
+                error = .unknownState
+            }
+            errorSubject.send(error)
             return
         }
         
+        discoveredPeripheralsUUIDs.removeAll()
+        isScanning = true
         centralManager.scanForPeripherals(withServices: nil, options: nil)
-    }
-    
-    func stopScanning() {
-        centralManager.stopScan()
-        print("Stopped scanning")
-    }
-    
-    // MARK: - CBCentralManagerDelegate
-    
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        switch central.state {
-        case .poweredOn:
-            print("Bluetooth включен")
-        case .poweredOff:
-            print("Bluetooth выключен")
-            //     showBluetoothAlert()
-        case .resetting:
-            print("Bluetooth сбрасывается")
-        case .unauthorized:
-            print("Bluetooth не авторизован")
-        case .unknown:
-            print("Неизвестное состояние Bluetooth")
-        case .unsupported:
-            print("Bluetooth не поддерживается")
-        @unknown default:
-            break
+        
+        if let timeout {
+            DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
+                self?.stopScanning()
+            }
         }
     }
     
+    func stopScanning() {
+        guard isScanning else { return }
+        centralManager.stopScan()
+        isScanning = false
+        didFinishScanning.send(true)
+    }
+    
+    // MARK: - CBCentralManagerDelegate
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+            switch central.state {
+            case .poweredOn:
+                print("Bluetooth включен")
+            case .poweredOff:
+                errorSubject.send(.poweredOff)
+            case .unauthorized:
+                errorSubject.send(.unauthorized)
+            case .unsupported:
+                errorSubject.send(.unsupported)
+            case .resetting, .unknown:
+                errorSubject.send(.unknownState)
+            @unknown default:
+                errorSubject.send(.unknownState)
+            }
+        }
+    
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        let name = peripheral.name ?? "Неизвестное устройство"
-        let uuid = peripheral.identifier
-        let status = peripheral.state
-        let rssiValue = RSSI.intValue
-        
-        if !discoveredPeripheralsUUIDs.contains(uuid) {
-            let device = BluetoothDeviceModel(name: name, rssi: rssiValue, uuid: uuid, peripheralState: status)
-            discoveredPeripheralsUUIDs.insert(uuid)
-            deviceDiscoveredSubject.send(device)
+        if !discoveredPeripheralsUUIDs.contains(peripheral.identifier) {
+            discoveredPeripheralsUUIDs.insert(peripheral.identifier)
+            discoveredDevice.send((peripheral, Int(truncating: RSSI)))
         }
     }
 }

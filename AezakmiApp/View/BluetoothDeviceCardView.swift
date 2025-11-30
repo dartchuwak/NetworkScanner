@@ -28,7 +28,7 @@ struct BluetoothDeviceCardView: View {
             
             Text("UUID: \(device.uuid)")
             
-            Text("Статус: \(device.status.rawValue)")
+            Text("Статус: \(device.state)")
                 .font(.subheadline)
                 .foregroundColor(.gray)
             

@@ -7,10 +7,11 @@
 
 import SwiftUI
 
+
 struct ScannerView: View {
     @ObservedObject var scannerViewModel: ScannerViewModel
     @State var isScanActive: Bool = false
-    @State private var picker: DeviceType = .bt
+    @State private var picker: DeviceType = .lan
     
     var body: some View {
         NavigationView {
@@ -26,27 +27,27 @@ struct ScannerView: View {
                     
                     ScrollView {
                         LazyVStack {
-                            if picker == .bt {
-                                ForEach(scannerViewModel.bluetoothDevices) { device in
-                                    BluetoothDeviceCardView(device: device)
-                                }
-                                
-                            } else {
+                            switch picker {
+                            case .lan:
                                 ForEach(scannerViewModel.lanDevices) { device in
                                     LanDeviceCardView(device: device)
                                 }
+                            case .bt:
+                                ForEach(scannerViewModel.bluetoothDevices) { device in
+                                    BluetoothDeviceCardView(device: device)
+                                }
                             }
                         }
+                        .padding(.top, 20)
                         .padding(.horizontal)
                     }
                 }
-                .navigationTitle("Поиск")
                 
                 VStack {
                     Spacer()
                     
                     Button {
-                        scannerViewModel.startScanning()
+                        scannerViewModel.startScanning(timeout: 5)
                     } label: {
                         Text("Начать сканирование")
                             .font(.headline)
@@ -60,8 +61,7 @@ struct ScannerView: View {
                 }
                 
                 if scannerViewModel.isScanActive {
-                    ProgressView()
-                        .scaleEffect(1)
+                   ScanAnimationView(count: scannerViewModel.devicesCount)
                 }
             }
         }

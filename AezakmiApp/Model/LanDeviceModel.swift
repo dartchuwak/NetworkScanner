@@ -19,6 +19,4 @@ struct LanDeviceModel: Identifiable {
         self.macAddress = macAddress
         self.id = id
     }
-    
-    
 }

@@ -25,47 +25,9 @@ final class CoreDataStack {
         }
     }
     
-    func saveContext(_ context: NSManagedObjectContext? = nil) {
+    func saveContext(_ context: NSManagedObjectContext? = nil) throws {
         let context = context ?? self.context
         guard context.hasChanges else { return }
-        do {
             try context.save()
-        } catch {
-            print("Ошибка сохранения контекста: \(error)")
-        }
-    }
-}
-
-extension CoreDataStack {
-    
-    @discardableResult
-    func saveScanSession(
-        lanDevices: [LanDeviceModel],
-        bluetoothDevices: [BluetoothDeviceModel]
-    ) throws -> ScanSession {
-        
-        let session = ScanSession(context: context)
-        session.id = UUID()
-        session.timeStamp = Date()
-        
-        for lan in lanDevices {
-            let device = LanDeviceEntity(context: context)
-            device.name = lan.name
-            device.ip = lan.ipAdress
-            device.mac = lan.macAddress
-            device.scanSession = session
-        }
-        
-        for bt in bluetoothDevices {
-            let device = BluetoothDeviceEntity(context: context)
-            device.uuid = bt.uuid
-            device.name = bt.name
-            device.rssi = Int32(bt.rssi)
-            device.status = bt.status.rawValue
-            device.scanSession = session
-        }
-        
-        try context.save()
-        return session
     }
 }

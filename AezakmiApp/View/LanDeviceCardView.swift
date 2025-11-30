@@ -12,13 +12,13 @@ struct LanDeviceCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(device.name)
+            Text(device.ipAdress)
                 .font(.title2)
                 .fontWeight(.semibold)
                 .foregroundColor(.black)
                 .lineLimit(1)
             
-            Text("IP: \(device.ipAdress)")
+            Text("HOST: \(device.name)")
                 .font(.subheadline)
                 .foregroundColor(.gray)
             
