@@ -39,7 +39,6 @@ final class CoreDataStack {
 }
 
 extension CoreDataStack {
-    
     func deleteAllData() throws {
         let ctx = viewContext
         

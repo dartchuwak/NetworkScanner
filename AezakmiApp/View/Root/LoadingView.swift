@@ -11,8 +11,8 @@ import Lottie
 struct LoadingView: View {
     @Binding var isAnimationPlayed: Bool
     var body: some View {
-        LottieView(animation: .named("loader"))
-            .playing()
+        LottieView(animation: .named("loading"))
+            .playing(loopMode: .repeat(3))
             .animationDidFinish { _ in
                 isAnimationPlayed.toggle()
                }
